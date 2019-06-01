@@ -8,11 +8,9 @@ Description: This script takes in an input image, then using PIL to find the edg
 Credits: Some of the below code was sourceed from the following -
          https://www.codementor.io/isaib.cicourel/image-manipulation-in-python-du1089j1u
 """
-import colorama
-import cv2
+
 import os
 import re
-import sys
 import time
 import tkinter as tk
 import webbrowser

@@ -28,7 +28,7 @@ from tqdm import tqdm
 
 mouse = Controller()
 root = tk.Tk()
-root.deiconify()
+# root.deiconify()
 root.withdraw()
 
 
@@ -205,7 +205,6 @@ def play_game():
     noun_list = list(nouns.split("\n"))
 
     random_noun = noun_list[random.randint(0, len(noun_list) - 1)]
-    print(random_noun)
 
     response = google_images_download.googleimagesdownload()
     arguments = {"keywords": random_noun, "limit": 2, "size": "medium"}

@@ -10,15 +10,22 @@ Credits: Some of the below code was sourceed from the following -
 """
 
 import os
+import sys
 import re
 import time
 import tkinter as tk
 import webbrowser
+import random
+import requests
+import contextlib
+import shutil
+from google_images_download import google_images_download
 from PIL import Image, ImageFilter
 from colorama import Fore, Style
 from pynput.mouse import Button, Controller
 from tkinter import filedialog
 from tqdm import tqdm
+
 
 mouse = Controller()
 root = tk.Tk()
@@ -33,6 +40,7 @@ def menu():
     print('\nWelcome!\n')
     print(Fore.LIGHTCYAN_EX, '1) Load an existing drawing')
     print(Fore.LIGHTCYAN_EX, '2) Open an new image and start drawing', Style.RESET_ALL)
+    print(Fore.LIGHTCYAN_EX, '3) Play the guessing game', Style.RESET_ALL)
     option = int(input('\nPlease enter an option: '))
     print(option)
 
@@ -47,10 +55,14 @@ def menu():
 
     elif option == 2:
         opened_image = open_image()
-        final_image = find_edges(opened_image)
+        black_image = convert_black(opened_image)
+        final_image = find_edges(black_image)
         get_coordinates(final_image)
         draw('coordinates.txt')
         save()
+
+    elif option == 3:
+        play_game()
 
     else:
         print('\nPlease enter a valid option...\n')
@@ -79,13 +91,17 @@ def open_image():
         root.withdraw()
         menu()
     else:
-        new_image = Image.open(file_path)
-        pallet_image = new_image.convert('RGBA')
-        edges = pallet_image.filter(ImageFilter.FIND_EDGES)
-        black_image = edges.convert('1')  # convert image to black and white
-        # final_image = black_image.filter(ImageFilter.SMOOTH)
+        image = Image.open(file_path)
         root.withdraw()
-        return black_image
+        return image
+
+
+def convert_black(image_file_path):
+    pallet_image = image_file_path.convert('RGBA')
+    edges = pallet_image.filter(ImageFilter.FIND_EDGES)
+    black_image = edges.convert('1')  # convert image to black and white
+    # final_image = black_image.filter(ImageFilter.SMOOTH)
+    return black_image
 
 
 def find_edges(image):
@@ -160,6 +176,62 @@ def save():
             os.remove('coordinates.txt')
     else:
         os.remove('coordinates.txt')
+
+
+def guess_drawing(guess_term, actual_term):
+    if guess_term == actual_term:
+        return True
+
+
+def play_game():
+
+    lives = 3
+
+    f = open(os.devnull, 'w')
+    sys.stdout = f
+
+    nouns = requests.get("http://www.desiquintans.com/downloads/nounlist/nounlist.txt").text
+    noun_list = list(nouns.split("\n"))
+
+    random_noun = noun_list[random.randint(0, len(noun_list)-1)]
+    print(random_noun)
+
+    response = google_images_download.googleimagesdownload()
+    arguments = {"keywords": random_noun, "limit": 2}
+
+    with contextlib.redirect_stdout(None):  # disable logging so the noun isn't printed!
+        response.download(arguments)
+
+    sys.stdout = sys.__stdout__  # re-enable logging
+
+    arr = os.listdir('downloads/%s' % random_noun)
+    image_1_path = arr[0]
+    image_2_path = arr[1]
+
+    image1 = Image.open('downloads/%s/%s' % (random_noun, image_1_path))
+    black_image = convert_black(image1)
+    final_image = find_edges(black_image)
+    get_coordinates(final_image)
+    draw('coordinates.txt')
+
+    os.remove('coordinates.txt')
+    shutil.rmtree('downloads')
+
+    while lives is not 0:
+
+        print(Fore.MAGENTA + 'Lives left: %d\n' % lives)
+        option = input(Fore.LIGHTYELLOW_EX + '\nWhat do you think this drawing is? ' + Style.RESET_ALL)
+
+        if option == random_noun:
+            print(Fore.GREEN + 'YOU WIN!')
+            time.sleep(2)
+            sys.exit(0)
+        else:
+            lives -= 1
+
+    print(Fore.RED + '\n0 LIVES LEFT - GAME OVER!')
+    print('CORRECT ANSWER: %s' % random_noun)
+    sys.exit()
 
 
 if __name__ == "__main__":

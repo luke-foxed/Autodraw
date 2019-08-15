@@ -38,9 +38,11 @@ def main():
 
 def menu():
     print('\nWelcome!\n')
-    print(Fore.LIGHTCYAN_EX, '1) Load an existing drawing')
-    print(Fore.LIGHTCYAN_EX, '2) Open an new image and start drawing', Style.RESET_ALL)
-    print(Fore.LIGHTCYAN_EX, '3) Play the guessing game', Style.RESET_ALL)
+    print(Fore.LIGHTCYAN_EX + '-------------')
+    print('1) Load an existing drawing')
+    print('2) Open an new image and start drawing')
+    print('3) Play the guessing game')
+    print('-------------' + Style.RESET_ALL)
     option = int(input('\nPlease enter an option: '))
     print(option)
 
@@ -111,9 +113,9 @@ def find_edges(image):
     width, height = bw.size
     cropped_image = bw.crop((5, 5, width - 5, height - 5))  # Crop white border out of image
 
-    if width and height > 800:
+    if width and height > 700:
         print('Image too large, resizing by half...')
-        resize_factor = width / 800
+        resize_factor = width / 700
         resize = cropped_image.resize((int(width / resize_factor), int(height / resize_factor)))
         print('New image size: ', (int(width / resize_factor), int(height / resize_factor)))
         # resize.save('converted_image.png')
@@ -145,6 +147,7 @@ def get_coordinates(image):
 
 
 def draw(coordinates):
+
     webbrowser.open('http://kleki.com/')
     time.sleep(10)  # allow for time to select brush size/color
     mouse.click(Button.left)
@@ -178,17 +181,26 @@ def save():
         os.remove('coordinates.txt')
 
 
-def guess_drawing(guess_term, actual_term):
-    if guess_term == actual_term:
-        return True
+def get_hint(noun, image_2_path):
+
+    image2 = Image.open('downloads/%s/%s' % (noun, image_2_path))
+    black_image = convert_black(image2)
+    final_image = find_edges(black_image)
+    get_coordinates(final_image)
+    draw('coordinates.txt')
+
+    os.remove('coordinates.txt')
+    shutil.rmtree('downloads')
 
 
 def play_game():
 
-    lives = 3
+    print(Fore.LIGHTCYAN_EX + '\n-------------')
+    print('To play, guess the drawing! You have one hint, press "h" for your hint')
+    print('-------------\n' + Style.RESET_ALL)
 
-    f = open(os.devnull, 'w')
-    sys.stdout = f
+    lives = 3
+    hints = 1
 
     nouns = requests.get("http://www.desiquintans.com/downloads/nounlist/nounlist.txt").text
     noun_list = list(nouns.split("\n"))
@@ -197,7 +209,7 @@ def play_game():
     print(random_noun)
 
     response = google_images_download.googleimagesdownload()
-    arguments = {"keywords": random_noun, "limit": 2}
+    arguments = {"keywords": random_noun, "limit": 2, "size": "medium"}
 
     with contextlib.redirect_stdout(None):  # disable logging so the noun isn't printed!
         response.download(arguments)
@@ -215,24 +227,30 @@ def play_game():
     draw('coordinates.txt')
 
     os.remove('coordinates.txt')
-    shutil.rmtree('downloads')
 
     while lives is not 0:
 
         print(Fore.MAGENTA + 'Lives left: %d\n' % lives)
-        option = input(Fore.LIGHTYELLOW_EX + '\nWhat do you think this drawing is? ' + Style.RESET_ALL)
+        option = input(Fore.LIGHTYELLOW_EX + '\nWhat do you think this drawing is? ' + Style.RESET_ALL).lower()
 
         if option == random_noun:
             print(Fore.GREEN + 'YOU WIN!')
             time.sleep(2)
             sys.exit(0)
+        elif option == 'h' and hints == 1:
+            print('\nDrawing second image...\n')
+            get_hint(random_noun, image_2_path)
+            hints -= 1
         else:
             lives -= 1
 
     print(Fore.RED + '\n0 LIVES LEFT - GAME OVER!')
     print('CORRECT ANSWER: %s' % random_noun)
+
+    shutil.rmtree('downloads')
     sys.exit()
 
 
 if __name__ == "__main__":
     main()
+

@@ -245,7 +245,11 @@ def play_game():
     print(Fore.RED + '\n0 LIVES LEFT - GAME OVER!')
     print('CORRECT ANSWER: %s' % random_noun)
 
-    shutil.rmtree('downloads')
+    try:
+        shutil.rmtree('downloads')
+    except OSError:
+        pass
+
     sys.exit()
 
 

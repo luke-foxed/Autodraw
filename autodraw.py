@@ -26,10 +26,10 @@ from pynput.mouse import Button, Controller
 from tkinter import filedialog
 from tqdm import tqdm
 
-
 mouse = Controller()
 root = tk.Tk()
 root.deiconify()
+root.withdraw()
 
 
 def main():
@@ -88,13 +88,13 @@ def open_image():
         initialdir='/', title='Select Image',
         filetypes=[('Image', '*.jpeg *.jpg *.png')]
     )
+    root.update()
     if file_path == '':
         print('\nNo file selected!\n')
-        root.withdraw()
         menu()
     else:
+        time.sleep(2)  # wait until tkinter window closes
         image = Image.open(file_path)
-        root.withdraw()
         return image
 
 
@@ -147,13 +147,14 @@ def get_coordinates(image):
 
 
 def draw(coordinates):
-
+    print(Fore.LIGHTGREEN_EX + '\nDrawing will start 10 in seconds, use this time to select your brush/color!\n' +
+          Style.RESET_ALL)
+    time.sleep(1)
     webbrowser.open('http://kleki.com/')
     time.sleep(10)  # allow for time to select brush size/color
     mouse.click(Button.left)
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
-    print('\nDrawing, please wait...\n')
     time.sleep(0.5)
 
     num_lines = sum(1 for line in open(coordinates, 'r'))
@@ -182,7 +183,6 @@ def save():
 
 
 def get_hint(noun, image_2_path):
-
     image2 = Image.open('downloads/%s/%s' % (noun, image_2_path))
     black_image = convert_black(image2)
     final_image = find_edges(black_image)
@@ -194,7 +194,6 @@ def get_hint(noun, image_2_path):
 
 
 def play_game():
-
     print(Fore.LIGHTCYAN_EX + '\n-------------')
     print('To play, guess the drawing! You have one hint, press "h" for your hint')
     print('-------------\n' + Style.RESET_ALL)
@@ -205,7 +204,7 @@ def play_game():
     nouns = requests.get("http://www.desiquintans.com/downloads/nounlist/nounlist.txt").text
     noun_list = list(nouns.split("\n"))
 
-    random_noun = noun_list[random.randint(0, len(noun_list)-1)]
+    random_noun = noun_list[random.randint(0, len(noun_list) - 1)]
     print(random_noun)
 
     response = google_images_download.googleimagesdownload()
@@ -253,4 +252,3 @@ def play_game():
 
 if __name__ == "__main__":
     main()
-

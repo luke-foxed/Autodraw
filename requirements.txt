@@ -1,6 +1,6 @@
 pynput==1.4.2
 image==1.5.27
-Pillow==6.0.0
+Pillow==8.2.0
 colorama==0.4.1
 tqdm==4.28.1
 google-images-download==2.8.0
